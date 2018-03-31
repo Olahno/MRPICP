@@ -1,3 +1,3 @@
 all:
-	g++ -pthread socketrpi.cpp -o socketrpi -lwiringPi -lcrypt -lrt
+	g++ -pthread mrpiserver.cpp -o mrpiserver -lwiringPi -lcrypt -lrt
 

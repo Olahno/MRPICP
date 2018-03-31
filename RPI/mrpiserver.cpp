@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cstring>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -243,17 +244,17 @@ void *connection_handler(void *socket_desc)
         //end of string marker
 		client_message[read_size] = '\0';
 		
-		if (client_message == "forward")
+		if (strcmp(client_message,"forward") == 0)
 			mrpi.forward();
-		else if (client_message == "left")
+		else if (strcmp(client_message,"left") == 0)
 			mrpi.left();
-		else if (client_message == "right")
+		else if (strcmp(client_message,"right") == 0)
 			mrpi.right();
-		else if (client_message == "backward")
+		else if (strcmp(client_message,"backward") == 0)
 			mrpi.backward();
-		else if (client_message == "stop")
+		else if (strcmp(client_message,"stop") == 0)
 			mrpi.stop();
-		else if (client_message == "sonar") {
+		else if (strcmp(client_message,"sonar") == 0) {
 			sprintf(message, "%d",getCM());
 			write(sock, message, strlen(message));
 			}
