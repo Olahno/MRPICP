@@ -1,0 +1,204 @@
+
+<html>
+ <head>
+   <title>MRPI CONTROL PANEL</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+ </head>
+ <body>
+ <div class="w3-container">
+ <div class="w3-display-topright">
+ <form method="post" action="{{ url_for('Logout') }}">
+<input type="submit" value= Logout>
+</form>
+</div>
+       <div class="w3-display-topleft">
+<button id = "esp_connect" style="margin-right: 20px;height:60px;width:120px">
+	Connect to ESP
+	</button>
+</p>
+</p>
+<span> Temperature: </span>
+<span id = "esp_temperature" style="margin-right: 20px"></span>
+<p>
+</p>
+<span> Humidity: </span>
+<span id = "esp_humidity" style="margin-right: 20px"></span>
+<p>
+</p>
+<span> Gas: </span>
+<span id = "esp_gas" style="margin-right: 20px"></span>
+<p>
+</p>
+<div>
+<button id = "esp_getdata" style="height:60px;width:120px">
+	Start ESP data stream
+</button>
+<button id = "esp_stop" style="height:60px;width:120px">
+	Stop ESP data stream
+</button>
+</div>
+</div>
+       <div class="w3-display-middle">
+<div align="center">
+<button id = "connect" style="height:40px;width:100px">
+        Connect
+    </button>
+<button id = "disconnect" style="height:40px;width:100px">
+        Disconnect
+    </button>
+</div>
+<p>
+</p>
+<div align="center">
+<img id="cam" src="http://192.168.43.188:8080/?action=stream" />
+</div>
+<div align="center">
+<div>
+<button id="start_sonar"> Start_sonar </button>
+<span> range is : </span>
+<span id="myspan">  </span>
+<button id="stop_sonar"> Stop_sonar </button>
+</div>
+<p>
+</p>
+<button class="command command-{{ command }}" value="{{'forward'}}" style="height:50px;width:80px">
+        forward 
+    </button>
+</div>
+<p>
+</p>
+<div align="center">
+<button class="command command-{{ command }}" value= "{{ 'left' }}" style="height:60px;width:80px">
+        left
+    </button>
+<button class="command command-{{ command }}" value="{{'backward'}}" style="height:60px;width:85px">
+        backward 
+    </button>
+<button class="command command-{{ command }}" value="{{'right'}}" style="height:60px;width:80px">
+        right
+    </button>
+</div>
+</div>
+<script>
+// Only run what comes next *after* the page has loaded
+var xhr = new XMLHttpRequest();
+var movrqst = new XMLHttpRequest();
+var esp = new XMLHttpRequest();
+var btn_start = document.getElementById("start_sonar");
+var btn_stop = document.getElementById("stop_sonar");
+var btn_connect = document.getElementById("connect");
+var esp_getdata = document.getElementById("esp_getdata");
+var esp_stop = document.getElementById("esp_stop");
+var esp_connect = document.getElementById("esp_connect");
+var btn_disconnect = document.getElementById("disconnect");
+var sonar_trigger = 0;
+var esp_trigger = 0;
+
+esp_getdata.addEventListener("click", function(e) {
+esp_trigger = 1;
+e.preventDefault();
+espgetdata();
+});
+esp_stop.addEventListener("click", function(e) {
+e.preventDefault();
+esp_trigger = 0;
+});
+esp_connect.addEventListener("click", function(e) {
+esp.open("GET", "/espconnect", true);
+esp.send();
+});
+btn_start.addEventListener("click", function(e) {
+sonar_trigger = 1;
+e.preventDefault();
+sendshit();
+});
+btn_stop.addEventListener("click", function(e) {
+e.preventDefault();
+sonar_trigger = 0;
+});
+btn_connect.addEventListener("click", function(e) {
+movrqst.open("GET", "/connect", true);
+movrqst.send();
+});
+btn_disconnect.addEventListener("click", function(e) {
+movrqst.open("GET", "/disconnect", true);
+movrqst.send();
+});
+function handle(response) {
+if (this.readyState == 4 && this.status == 200) {
+document.getElementById("myspan").innerHTML = xhr.responseText;
+	if (sonar_trigger == 1) sendshit();
+}
+}
+function esphandle(response) {
+if (this.readyState == 4 && this.status == 200) {
+stats = xhr.responseText.split(",");
+document.getElementById("esp_temperature").innerHTML = xhr.responseText.slice(2,4);
+document.getElementById("esp_humidity").innerHTML = xhr.responseText.slice(6,8);
+document.getElementById("esp_gas").innerHTML = xhr.responseText.slice(10,13);
+
+	if (esp_trigger == 1) espgetdata();
+}
+}
+function sendshit(){
+	xhr.onreadystatechange = handle; 
+	xhr.open("GET", "/sonar", true);
+	xhr.send(); 
+}
+function espgetdata(){
+	xhr.onreadystatechange = esphandle; 
+	xhr.open("GET", "/espdata", true);
+	xhr.send(); 
+}
+addEventListener("DOMContentLoaded", function() {
+  // Grab all of the elements with a class of command
+  // (which all of the buttons we just created have)
+  var commandButtons = document.querySelectorAll(".command");
+  for (var i=0, l=commandButtons.length; i<l; i++) {
+    var button = commandButtons[i];
+    // For each button, listen for the "click" event
+    button.addEventListener("mousedown", function(e) {
+      // When a click happens, stop the button
+      // from submitting our form (if we have one)
+      e.preventDefault();
+      var clickedButton = e.target;
+      var command = clickedButton.value;
+      // Now we need to send the data to our server
+      // without reloading the page - this is the domain of
+      // AJAX (Asynchronous JavaScript And XML)
+      // We will create a new request object
+      // and set up a handler for the response
+      movrqst.onload = function() {
+       //
+      };
+      // We point the request at the appropriate command
+      movrqst.open("GET", "/" + command, true);
+      // and then we send it off
+      movrqst.send();
+    });
+      button.addEventListener("mouseup", function(e) {
+      // When a click happens, stop the button
+      // from submitting our form (if we have one)
+      e.preventDefault();
+      var clickedButton = e.target;
+      var command = "stop";
+      // Now we need to send the data to our server
+      // without reloading the page - this is the domain of
+      // AJAX (Asynchronous JavaScript And XML)
+      // We will create a new request object
+      // and set up a handler for the response
+      movrqst.onload = function() {
+       //
+      };
+      // We point the request at the appropriate command
+      movrqst.open("GET", "/" + command, true);
+      // and then we send it off
+      movrqst.send();
+    });
+ 
+  }
+}, true);
+</script>
+ </body>
+</html>
